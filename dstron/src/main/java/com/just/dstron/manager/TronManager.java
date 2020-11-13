@@ -26,14 +26,18 @@ public class TronManager {
         executor1.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                int block = random.nextInt(24888200);
-                JSONObject params=new JSONObject();
-                params.put("num",block);
-                Response response = Http.post3("https://api.trongrid.io/wallet/getblockbynum",params.toJSONString(), Header.create(),5000);
-                cnt+=1;
-                if(cnt%10==0){
-                    log.info("cnt:{}",cnt);
-                    cnt=0L;
+                try {
+                    cnt+=1;
+                    if(cnt%10==0){
+                        log.info("cnt:{}",cnt);
+                        cnt=0L;
+                    }
+                    int block = random.nextInt(24888200);
+                    JSONObject params=new JSONObject();
+                    params.put("num",block);
+                    Response response = Http.post3("https://api.trongrid.io/wallet/getblockbynum",params.toJSONString(), Header.create(),5000);
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
             }
         },100,500, TimeUnit.MILLISECONDS);
