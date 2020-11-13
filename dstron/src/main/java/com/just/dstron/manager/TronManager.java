@@ -97,7 +97,6 @@ public class TronManager {
             params.put("startNum",block);
             params.put("endNum",block+random.nextInt(5));
             Response response = Http.post3("https://api.trongrid.io/wallet/getblockbylimitnext",params.toJSONString(), Header.create(),5000);
-            log.info(response.getContent());
         }catch (Exception e){
 
         }
