@@ -60,7 +60,7 @@ public class TronManager {
                     e.printStackTrace();
                 }
             }
-        },100,100, TimeUnit.MILLISECONDS);
+        },100,50, TimeUnit.MILLISECONDS);
     }
 
     private void atk1(){
