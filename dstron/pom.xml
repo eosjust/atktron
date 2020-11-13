@@ -52,7 +52,7 @@
 		<dependency>
 			<groupId>org.nutz</groupId>
 			<artifactId>nutz</artifactId>
-			<version>1.r.65</version>
+			<version>1.r.68.v20201011</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
