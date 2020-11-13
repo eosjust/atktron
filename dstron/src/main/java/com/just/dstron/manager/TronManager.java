@@ -19,21 +19,23 @@ public class TronManager {
     private ScheduledExecutorService executor1 = Executors.newSingleThreadScheduledExecutor();
 
     private Random random=new Random();
+    private Long cnt=0L;
 
     @PostConstruct
     public void init(){
         executor1.scheduleWithFixedDelay(new Runnable() {
-
             @Override
             public void run() {
-
                 int block = random.nextInt(24888200);
                 JSONObject params=new JSONObject();
                 params.put("num",block);
                 Response response = Http.post3("https://api.trongrid.io/wallet/getblockbynum",params.toJSONString(), Header.create(),5000);
-
-                log.info(response.getContent());
+                cnt+=1;
+                if(cnt%10==0){
+                    log.info("cnt:{}",cnt);
+                    cnt=0L;
+                }
             }
-        },100,50, TimeUnit.MILLISECONDS);
+        },100,500, TimeUnit.MILLISECONDS);
     }
 }
