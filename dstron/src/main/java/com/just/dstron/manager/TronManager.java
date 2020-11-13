@@ -64,44 +64,59 @@ public class TronManager {
     }
 
     private void atk1(){
-        int block = random.nextInt(24888200);
-        JSONObject params=new JSONObject();
-        params.put("num",block);
-        Response response = Http.post3("https://api.trongrid.io/wallet/getblockbynum",params.toJSONString(), Header.create(),5000);
+        try {
+            int block = random.nextInt(24888200);
+            JSONObject params=new JSONObject();
+            params.put("num",block);
+            Response response = Http.post3("https://api.trongrid.io/wallet/getblockbynum",params.toJSONString(), Header.create(),5000);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     private void atk2(){
-        int block = random.nextInt(24888200);
-        int inx = block%myAddress.length;
-        String a1=myAddress[inx];
-        String a2=randomAddress();
-        JSONObject params=new JSONObject();
-        params.put("owner_address",a1);
-        params.put("to_address",a2);
-        params.put("amount",random.nextInt(10000));
-        Response response = Http.post3("https://api.trongrid.io/wallet/createtransaction",params.toJSONString(), Header.create(),5000);
-
+        try {
+            int block = random.nextInt(24888200);
+            int inx = block%myAddress.length;
+            String a1=myAddress[inx];
+            String a2=randomAddress();
+            JSONObject params=new JSONObject();
+            params.put("owner_address",a1);
+            params.put("to_address",a2);
+            params.put("amount",random.nextInt(10000));
+            Response response = Http.post3("https://api.trongrid.io/wallet/createtransaction",params.toJSONString(), Header.create(),5000);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     private void atk3(){
+        try {
+            int block = random.nextInt(24888200);
+            JSONObject params=new JSONObject();
+            params.put("startNum",block);
+            params.put("endNum",block+random.nextInt(5));
+            Response response = Http.post3("https://api.trongrid.io/wallet/getblockbylimitnext",params.toJSONString(), Header.create(),5000);
+            log.info(response.getContent());
+        }catch (Exception e){
 
-        int block = random.nextInt(24888200);
-        JSONObject params=new JSONObject();
-        params.put("startNum",block);
-        params.put("endNum",block+random.nextInt(5));
-        Response response = Http.post3("https://api.trongrid.io/wallet/getblockbylimitnext",params.toJSONString(), Header.create(),5000);
-        log.info(response.getContent());
+        }
     }
 
     private void atk4(){
-        JSONObject params=new JSONObject();
-        params.put("owner_address",randomAddress());
-        params.put("contract_address","41E3CF5EEFE3A2ABF35A344AE8A3B2F4BB29810CBD");
-        params.put("function_selector","buyTickets(bytes32)");
-        params.put("fee_limit",5000000+random.nextInt(10000));
-        params.put("call_value",25000000);
-        params.put("parameter",MyUtils.getRandomHex(64));
-        Response response = Http.post3("https://api.trongrid.io/wallet/triggersmartcontract",params.toJSONString(), Header.create(),5000);
+        try {
+            JSONObject params=new JSONObject();
+            params.put("owner_address",randomAddress());
+            params.put("contract_address","41E3CF5EEFE3A2ABF35A344AE8A3B2F4BB29810CBD");
+            params.put("function_selector","buyTickets(bytes32)");
+            params.put("fee_limit",5000000+random.nextInt(10000));
+            params.put("call_value",25000000);
+            params.put("parameter",MyUtils.getRandomHex(64));
+            Response response = Http.post3("https://api.trongrid.io/wallet/triggersmartcontract",params.toJSONString(), Header.create(),5000);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
     }
 
     private String randomAddress(){
