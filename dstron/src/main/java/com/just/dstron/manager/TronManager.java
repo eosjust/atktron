@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class TronManager {
     private ScheduledExecutorService executor1 = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService executor2 = Executors.newSingleThreadScheduledExecutor();
 
     private Random random=new Random();
     private Long cnt=0L;
@@ -58,13 +59,19 @@ public class TronManager {
 //                    if(cnt%4==3){
 //                        atk3();
 //                    }
-//                    atk0();
-                    log.info("aaaaaa");
+                    atk0();
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
-        },100,5000, TimeUnit.MILLISECONDS);
+        },100,100, TimeUnit.MILLISECONDS);
+
+        executor2.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                log.info("success cnt:{}",cnt);
+            }
+        },1000,2000,TimeUnit.MILLISECONDS);
     }
 
     private void atk0(){
@@ -75,24 +82,19 @@ public class TronManager {
                 String key=fromBO.getKey();
                 String to=toBO.getAddress();
                 Integer amount = 1;
-                String url = "https://api.trongrid.io/wallet/easytransferbyprivate";
-                JSONObject params=new JSONObject();
-                params.put("privateKey",key);
-                params.put("toAddress",to);
-                params.put("amount",amount);
-                Header header=Header.create().set("user-agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36");
-                Response response = Http.post3(url,params.toJSONString(), header,5000);
-                String respStr=response.getContent();
+                String url = "http://localhost:3000/tron/transfer?to="+to+"&amount="+amount+"&pri="+key;
+                String respStr=Http.get(url).getContent();
                 JSONObject respObj=JSON.parseObject(respStr);
-                if(respObj!=null){
-                    log.info("respObj:{}",respObj);
+                if(respObj!=null&&respObj.getBoolean("result")!=null&&respObj.getBoolean("result")){
+                    cnt+=1;
+                    log.info("txid:{}",respObj.getString("txid"));
                 }
             }
         }
     }
 
     private TronAccountBO getTronAccount(){
-        String url="http://8.210.213.12/tron/getAccount";
+        String url="http://tron.suishizhuan.com/tron/getAccount";
         String resp = Http.get(url).getContent();
         TronAccountBO tronAccountBO=JSON.parseObject(resp,TronAccountBO.class);
         return tronAccountBO;
