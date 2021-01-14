@@ -3,14 +3,21 @@ package com.just.dstron.manager;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.just.dstron.entity.TronAccountBO;
+import com.just.dstron.pojo.TronAccountDO;
 import com.just.dstron.utils.MyUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.nutz.dao.Cnd;
+import org.nutz.dao.impl.NutDao;
 import org.nutz.http.*;
 import org.nutz.lang.util.Callback;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.security.SecureRandom;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -20,87 +27,125 @@ import java.util.concurrent.TimeUnit;
 public class TronManager {
     private ScheduledExecutorService executor1 = Executors.newSingleThreadScheduledExecutor();
     private ScheduledExecutorService executor2 = Executors.newSingleThreadScheduledExecutor();
-
+    private boolean start=false;
     private Random random=new Random();
+    private SecureRandom secureRandom=null;
+    private int maxSize=1000;
     private Long cnt=0L;
 
-    private String[] myAddress={
-            "4146FC1638C7D1AF2B346C47EAD6154B908D341449",
-            "412D8925322EAB55368FEACC99D76370106ED1718D",
-            "412C624EA17BA3AE5E05DF077C65D9AB1E6E10A6AE",
-            "419B5013351C36A93E07213D5FBA8EB54A43C36926",
-            "41500BE14CDCF5CB323D395EF08A829C4ADE8121BD",
-            "41AAE0B59DFBB9E32E0EDEB47BC5CAC696D82738F5",
-            "41055CD8994D3D12D6264600956A54633BD79F68E2",
-            "41D7FDCB2406E2060F0F5CA4638ACC8E8239C817A5",
-            "41C44DB93B2E5BFBFC18C760CA99585E778BB663F8",
-            "41AC62B67F62E939616C59B079F9B4F1B0568B2AA5",
-    };
+    @Autowired
+    private NutDao nutDao;
 
     @PostConstruct
     public void init(){
+
+        maxSize = nutDao.count(TronAccountDO.class);
+        log.info("maxSize {}",maxSize);
+
         executor1.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 try {
-//                    cnt+=1;
-//                    if(cnt%10==0){
-//                        log.info("cnt:{}",cnt);
-//                    }
-//                    if(cnt%4==0){
-//                        atk3();
-//                    }
-//                    if(cnt%4==1){
-//                        atk3();
-//                    }
-//                    if(cnt%4==2){
-//                        atk3();
-//                    }
-//                    if(cnt%4==3){
-//                        atk3();
-//                    }
-                    atk0();
+                    if(start){
+                        atk();
+                    }
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
-        },100,100, TimeUnit.MILLISECONDS);
+        },1+random.nextInt(500),50, TimeUnit.MILLISECONDS);
 
         executor2.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 log.info("success cnt:{}",cnt);
+                checkStart();
+
             }
-        },1000,2000,TimeUnit.MILLISECONDS);
+        },1+random.nextInt(1000),1000,TimeUnit.MILLISECONDS);
     }
 
-    private void atk0(){
-        TronAccountBO fromBO=getTronAccount();
-        if(fromBO.getCode()==0){
-            TronAccountBO toBO=getTronAccount();
-            if(toBO.getCode()==0){
-                String key=fromBO.getKey();
-                String to=toBO.getAddress();
-                Integer amount = 1;
-                String url = "http://localhost:3000/tron/transfer?to="+to+"&amount="+amount+"&pri="+key;
-                String respStr=Http.get(url).getContent();
-                JSONObject respObj=JSON.parseObject(respStr);
-                if(respObj!=null&&respObj.getBoolean("result")!=null&&respObj.getBoolean("result")){
-                    cnt+=1;
-                    log.info("txid:{}",respObj.getString("txid"));
-                }
+    private void checkStart(){
+        try {
+            String url="http://tron.suishizhuan.com/tron/getEnable";
+            String resp = Http.get(url).getContent();
+            if("true".equals(resp)){
+                start=true;
+            }else{
+                start=false;
             }
+        }catch (Exception e){
+
         }
     }
 
-    private TronAccountBO getTronAccount(){
-        String url="http://tron.suishizhuan.com/tron/getAccount";
-        String resp = Http.get(url).getContent();
-        TronAccountBO tronAccountBO=JSON.parseObject(resp,TronAccountBO.class);
-        return tronAccountBO;
+    public int atk(){
+        if(secureRandom==null){
+            secureRandom=new SecureRandom();
+        }
+        int r=secureRandom.nextInt(100);
+        if(r>=0 && r<45){
+            atk0();
+        }else if(r>=45 && r<90){
+            atk1();
+        }else{
+            atk2();
+        }
+        return r;
     }
 
-    private void atk1(){
+    public void atk0(){
+        if(secureRandom==null){
+            secureRandom=new SecureRandom();
+        }
+        int id1 = secureRandom.nextInt(maxSize)+1;
+        int id2 = secureRandom.nextInt(maxSize)+1;
+        TronAccountDO accountDO1 = nutDao.fetch(TronAccountDO.class, Cnd.where("id","=",id1));
+        TronAccountDO accountDO2 = nutDao.fetch(TronAccountDO.class, Cnd.where("id","=",id2));
+        String key=accountDO1.getPrikey();
+        String to=accountDO2.getBase58();
+        Integer amount = 1;
+        String url = "http://localhost:3000/tron/transfer?to="+to+"&amount="+amount+"&pri="+key;
+        String respStr=Http.get(url).getContent();
+        JSONObject respObj=JSON.parseObject(respStr);
+        if(respObj!=null&&respObj.getBoolean("result")!=null&&respObj.getBoolean("result")){
+            cnt+=1;
+            log.info("txid:{}",respObj.getString("txid"));
+        }
+    }
+
+
+    public void atk1(){
+        if(secureRandom==null){
+            secureRandom=new SecureRandom();
+        }
+        int id1 = secureRandom.nextInt(maxSize)+1;
+        TronAccountDO accountDO1 = nutDao.fetch(TronAccountDO.class, Cnd.where("id","=",id1));
+        String key=accountDO1.getPrikey();
+        Integer amount = 1;
+        String url = "http://localhost:3000/tron/lend?from="+accountDO1.getBase58()+"&amount="+amount+"&pri="+key;
+        String respStr=Http.get(url).getContent();
+        if(StringUtils.isNotEmpty(respStr)){
+            cnt+=1;
+            log.info("txid:{}",respStr);
+        }
+    }
+
+    public void atk2(){
+        if(secureRandom==null){
+            secureRandom=new SecureRandom();
+        }
+        TronAccountDO accountDO1 = nutDao.fetch(TronAccountDO.class, 55);
+        String key=accountDO1.getPrikey();
+        String url = "http://localhost:3000/tron/interest?pri="+key;
+        String respStr=Http.get(url).getContent();
+        if(StringUtils.isNotEmpty(respStr)){
+            cnt+=1;
+            log.info("txid:{}",respStr);
+        }
+    }
+
+    public void atk3(){
         try {
             int block = random.nextInt(24888200);
             JSONObject params=new JSONObject();
@@ -111,23 +156,7 @@ public class TronManager {
         }
     }
 
-    private void atk2(){
-        try {
-            int block = random.nextInt(24888200);
-            int inx = block%myAddress.length;
-            String a1=myAddress[inx];
-            String a2=randomAddress();
-            JSONObject params=new JSONObject();
-            params.put("owner_address",a1);
-            params.put("to_address",a2);
-            params.put("amount",random.nextInt(10000));
-            Response response = Http.post3("https://api.trongrid.io/wallet/createtransaction",params.toJSONString(), Header.create(),5000);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    private void atk3(){
+    public void atk4(){
         try {
             int block = random.nextInt(24888200);
             JSONObject params=new JSONObject();
@@ -139,7 +168,7 @@ public class TronManager {
         }
     }
 
-    private void atk4(){
+    public void atk5(){
         try {
             JSONObject params=new JSONObject();
             params.put("owner_address",randomAddress());
@@ -154,6 +183,8 @@ public class TronManager {
         }
 
     }
+
+
 
     private String randomAddress(){
         return "41"+ MyUtils.getRandomHex(40);
